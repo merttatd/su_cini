@@ -1,126 +1,180 @@
 # 💧 Su Cini
 
-Su Cini, bilgisayar başında su içmeyi hatırlatan küçük bir masaüstü uygulamasıdır. Sistem tepsisinde çalışır; hareketli bir damla karakteri ve Türkçe mesajlarla su molalarını hatırlatır, içtiğiniz bardakları kaydeder ve günlük hedefinizi takip eder.
+**Masaüstündeki küçük su molası arkadaşın.**
 
-## Özellikler
+Su Cini, bilgisayar başında su içmeyi hatırlatan bir Windows masaüstü uygulamasıdır. Sistem tepsisinde çalışır; Türkçe mesajları, hareketli damla karakteri ve hedef kutlamalarıyla su molalarına eşlik eder.
 
-- **Günlük hedef:** Hazır seçeneklerden birini seçin veya 1–30 bardak arasında kendi hedefinizi belirleyin.
-- **Bardak miktarı:** Bir bardağı 50–1000 ml arasında ayarlayın. İlerlemenizi hem bardak hem mililitre olarak görün.
-- **Ayarlanabilir hatırlatmalar:** Sistem tepsisinden 30, 45, 60, 90 veya 120 dakikalık aralık seçin.
+## ✨ Özellikler
+
+- **Kişisel hedef:** 6, 8, 10 veya 12 bardaklık hazır seçeneklerden birini kullanın ya da 1–30 bardak arasında kendi hedefinizi seçin.
+- **Bardak miktarı:** Bir bardağı 50–1000 ml arasında ayarlayın; ilerlemenizi bardak ve mililitre olarak görün.
+- **Esnek hatırlatmalar:** 5–120 dakika arasında, beşer dakika artan 24 aralık seçeneği.
 - **Beş dakika erteleme:** Uygun olmadığınızda hatırlatmayı erteleyin.
-- **Tam ekran algılama:** Windows'ta tam ekran uygulaması algılandığında otomatik hatırlatma bekletilir. Tam ekrandan çıkıldıktan sonra kısa bir beklemeyle gösterilir.
-- **Hareketli karakter:** Su Cini, ilerlemenize ve ertelemelerinize göre farklı ifadeler ve mesajlar gösterir. Zaman zaman ekranın sağ kenarından göz atar.
-- **Yerel kayıt:** Günlük ilerlemeniz ve ayarlarınız bilgisayarınızda saklanır.
+- **Tam ekran algılama:** Windows'ta tam ekran uygulaması algılandığında otomatik hatırlatmayı bekletir.
+- **Öpücüklü kutlama:** Hedef tamamlandığında Su Cini ekranın ortasına gelir, kalplerle öpücük gönderir ve yerine döner.
+- **Yeni hedef turları:** Tamamlanan hedefin ardından aynı hedefi tekrarlayın veya yeni bir hedef seçin.
+- **Saklambaç:** Su Cini sağdan, soldan, tepeden ya da görev çubuğunun üstünden göz atar.
+- **İlerlemeyi sıfırlama:** Bugünkü sayaçları menüden onay vererek sıfırlayın.
+- **Yerel kayıt:** Hesap açmadan kullanın; ayarlar ve kayıtlar bilgisayarınızda saklanır.
 
-## Gereksinimler
+## 🚀 Başlatma
 
-- Python **3.10 veya üzeri**
-- PyQt6 — kurulum sırasında `requirements.txt` üzerinden yüklenir.
-- Sistem tepsisi destekleyen bir masaüstü ortamı
+### Hazır Windows paketiyle
 
-Windows kullanımı esas alınmıştır. Diğer platformlarda tam ekran algılama devre dışıdır; bu platformlar ayrıca doğrulanmamıştır.
+Elinizde taşınabilir Windows paketi varsa ZIP dosyasının tamamını bir klasöre çıkartıp `SuCini.exe` dosyasını çalıştırın. Python kurmanız gerekmez.
 
-## Kurulum
+**EXE dosyasını tek başına taşımayın.** Yanındaki `_internal` klasörü ve diğer paket dosyaları aynı yerde kalmalıdır.
 
-1. Bu GitHub sayfasındaki **Code → Download ZIP** seçeneğiyle projeyi indirin ve arşivi bir klasöre çıkartın. İsterseniz Git ile de klonlayabilirsiniz.
-2. Python kurulu değilse [python.org](https://www.python.org/downloads/) üzerinden kurun. Windows kurulumunda **Add Python to PATH** seçeneğini işaretleyin.
-3. Proje klasöründe bir terminal açın ve şu komutları çalıştırın:
+Kurulum paketi kullanıyorsanız kurulumdan sonra Su Cini'yi oluşturulan kısayoldan açabilirsiniz.
+
+### Kaynak koddan
+
+Windows'ta Python **3.11 veya üzeri, 64 bit** kurulu olmalıdır. Projeyi GitHub'dan indirin veya klonlayın, ardından proje klasöründeki PowerShell terminalinde çalıştırın:
 
 ```powershell
-python -m venv .venv
+py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
-
-Bu komutlar bağımlılıkları proje içindeki ayrı bir Python ortamına kurar. Ortamı etkinleştirmeniz gerekmez.
-
-> Windows'ta `python` komutu bulunamıyorsa ilk komutta `python` yerine `py` kullanmayı deneyin.
-
-## Başlatma
-
-Proje klasöründe:
-
-```powershell
 .\.venv\Scripts\python.exe main.py
 ```
 
-Açılışta günlük hedef ve bardak miktarı seçimi gösterilir. **Bugünkü görevi başlat** düğmesine bastığınızda uygulama sistem tepsisinde çalışmaya devam eder.
+`py` komutu bulunamıyorsa ilk komutta `python` kullanabilirsiniz. Bağımlılıklar proje içindeki sanal ortama kurulur; ortamı ayrıca etkinleştirmek gerekmez.
 
-Kurulumdan sonra terminal penceresi olmadan başlatmak için:
+Terminal penceresi olmadan başlatmak için:
 
 ```powershell
 Start-Process -FilePath ".\.venv\Scripts\pythonw.exe" -ArgumentList "main.py"
 ```
 
-Uygulama Windows açılışına otomatik olarak eklenmez; kullanmak istediğinizde başlatmanız gerekir. Aynı anda tek bir örneğini çalıştırın.
+Kaynak koddan çalıştırırken tüm `.py` dosyalarını ve `assets` klasörünü birlikte tutun. Özellikle `app_resources.py`, `celebration_effect.py` ve `goal_cycle_dialog.py` uygulamanın parçasıdır.
 
-## Kullanım
+## 🎯 İlk kullanım
 
-Hatırlatma penceresindeki **💧 Su içtim** düğmesi, ayarladığınız miktarda bir bardak su kaydeder. **5 dk ertele** düğmesi hatırlatmayı beş dakika erteler. Pencereyi sürükleyerek yerini değiştirebilirsiniz.
+1. Açılış ekranından bardak hedefinizi belirleyin.
+2. Bir bardağın kaç mililitre olduğunu seçin.
+3. **Bugünkü görevi başlat** düğmesine basın.
+4. Sistem tepsisindeki damla simgesinden hatırlatma aralığını ayarlayın.
 
-Görev çubuğunun bildirim alanındaki damla simgesine sağ tıklayarak aşağıdaki işlemlere ulaşabilirsiniz. Simge görünmüyorsa gizli simgeler bölümünü kontrol edin.
+Hedef seçme ekranının sağ üstündeki **×** düğmesi uygulamayı tamamen kapatır. Henüz onaylanmamış hedef değişiklikleri kaydedilmez.
 
-| Menü seçeneği | İşlevi |
+Hatırlatma geldiğinde **💧 Su içtim** düğmesi bir bardak kaydeder; **5 dk ertele** hatırlatmayı erteler. Normal hatırlatma penceresini sürükleyerek taşıyabilirsiniz.
+
+## 💕 Hedef tamamlandığında
+
+Su Cini bulunduğu monitörün ortasına yumuşakça süzülür. Yolculuk sırasında konuşma balonu, ilerleme yazısı ve düğmeler kaybolur; ortada yalnızca karakter ve yükselen kalpler görünür. Gözlerini kapatıp öpücük gönderdikten sonra eski yerine döner, yazılar ve düğmeler yeniden görünür olur.
+
+Gidiş ve dönüş yaklaşık **1,6 saniye**, öpücük bölümü **2,4 saniye** sürer.
+
+Hedefe ulaşıldığında bardak ve mililitre sayaçları **yeni tur için otomatik sıfırlanır**. Kutlama tamamlandıktan sonra iki seçenek sunulur:
+
+- **↻ Aynı hedefi tekrarla:** Mevcut hedef ve bardak miktarıyla yeni tura başlar.
+- **✦ Yeni bir hedef seç:** Hedef ve bardak miktarı ayarlarını açar.
+
+Her tamamlanan turda yeniden kutlama yapılabilir. Su içme kayıtları geçmişte tutulur; ekrandaki bardak ve mililitre değerleri, tamamlanan turların gün boyu toplamı yerine **mevcut turun ilerlemesini** gösterir. Otomatik hatırlatmalar devam eder.
+
+## 👀 Su Cini nereye saklandı?
+
+Su Cini bazen kendiliğinden ekran kenarından göz atar. Sistem tepsisindeki **Su Cini nereye saklandı?** seçeneğiyle de bu davranışı tetikleyebilirsiniz.
+
+- Sağ veya sol kenardan kısmen görünür.
+- Tepeden baş aşağı bakar.
+- Görev çubuğunun üstünden hafifçe yükselir.
+
+Fare imlecinin bulunduğu monitörü kullanır. Konum rastgele seçilir ve aynı kenar art arda gelmez. Fareyle yaklaşınca geldiği yöne geri kaçar; yaklaşmazsanız kısa süre sonra kendiliğinden saklanır.
+
+Tam ekran uygulaması veya görünür hatırlatma penceresi varken saklanma gösterimi bekletilir.
+
+## 🖱️ Sistem tepsisi menüsü
+
+Damla simgesi görünmüyorsa görev çubuğundaki gizli simgeler bölümünü kontrol edin. Simgeye sağ tıklayarak menüyü açabilirsiniz.
+
+| Seçenek | İşlev |
 | --- | --- |
 | Su Cinini göster | Hatırlatma penceresini açar. |
-| Şimdi su içtim | Ayarlanan bardak miktarı kadar su kaydeder. |
+| Şimdi su içtim | Ayarlanan miktarda bir bardak kaydeder. |
 | Günlük hedefi değiştir | Hedefi ve bardak miktarını düzenler. |
-| Hatırlatma aralığı | Otomatik hatırlatma sıklığını değiştirir. |
-| Bugünkü ilerlemeyi göster | Bardak sayısını, hedefi ve toplam miktarı gösterir. |
-| Su Cini nereye saklandı? | Uygun olduğunda ekran kenarındaki karakteri gösterir. |
+| Hatırlatma aralığı | 5–120 dakika arasında bir aralık seçtirir. |
+| Bugünkü ilerlemeyi göster | Mevcut turun bardak, hedef ve mililitre bilgisini gösterir. |
+| Bugünkü ilerlemeyi sıfırla | Onayınızla bugünkü sayaçları sıfırlar; hedef ve bardak miktarı korunur. |
+| Su Cini nereye saklandı? | Uygun olduğunda ekran kenarı animasyonunu gösterir. |
 | Çıkış | Uygulamayı tamamen kapatır. |
 
-### Kayıt ve hatırlatma davranışı
+## 💾 Kayıtlar nasıl çalışır?
 
-- Her **Su içtim** işlemi bir bardak olarak sayılır. Çok kısa aralıklarla tekrar basıldığında farklı bir mesaj gösterilir, ancak kayıt yine eklenir. Kayıt geri alma özelliği bulunmaz.
-- Bardak miktarını değiştirmek önceki kayıtların mililitre miktarını değiştirmez; yeni miktar sonraki kayıtlara uygulanır.
-- Gün değiştiğinde günlük sayaçlar yenilenir. Günlük hedef ve bardak miktarı ayarlarınız korunur.
-- Günlük hedefe ulaşınca kutlama mesajı gösterilir; otomatik hatırlatmalar devam eder.
-- Tam ekran algılama otomatik hatırlatmalar içindir. Menüden istediğiniz pencereler manuel olarak açılabilir.
+- Her **Su içtim** işlemi bir bardak sayılır. Kısa aralıklarla tekrar basmak kaydı engellemez; farklı bir mesaj gösterilebilir.
+- Programı kapatıp açmak, tamamlanmamış turun kayıtlarını silmez.
+- Hedefi değiştirmek mevcut kayıtları sıfırlamaz. Test kayıtlarını temizlemek için **Bugünkü ilerlemeyi sıfırla** seçeneğini kullanın.
+- Bardak miktarını değiştirmek önceki kayıtların mililitre değerini değiştirmez; yeni miktar sonraki kayıtlara uygulanır.
+- Gün değiştiğinde günlük sayaçlar yenilenir; hedef ve bardak miktarı ayarları korunur.
+- Tek bir kaydı geri alma özelliği bulunmaz.
 
-## Veriler nerede saklanır?
+### Verilerin konumu
 
-Ana kayıt dosyası Windows'ta kullanıcı klasörünüzün altındadır:
+Kaynak koddan veya normal Windows EXE'sinden çalıştırıldığında ana kayıt dosyası:
 
 ```text
 %USERPROFILE%\AppData\Roaming\SuCini\data.json
 ```
 
-Diğer platformlarda `~/.su_cini/data.json` kullanılır. Ayarlar, günlük sayaçlar ve son 2000 içme/erteleme işlemi bu dosyada tutulur. Son su içme zamanı ayrıca Qt'nin yerel ayar deposuna kaydedilir; Windows'ta bu depo `MertApps / Su Cini` adıyla kayıt defterindedir.
+Dosyada ayarlar, sayaçlar ve son 2000 işlem tutulur. Son su içme zamanı ayrıca Qt'nin yerel ayar deposunda `MertApps / Su Cini` adıyla saklanır. MSIX kurulumu altında Windows'un uygulama verisi yönlendirmesi nedeniyle fiziksel konum farklı olabilir.
 
-Uygulama hesap açmanızı istemez ve kayıtlarınızı bir sunucuya göndermez. Yedek almak için uygulamayı kapatıp `data.json` dosyasını kopyalayabilirsiniz. Okunamayan veri dosyasıyla karşılaşıldığında mevcut değilse `data.json.corrupt` adlı bir kopya korunur.
+Uygulama hesap açmanızı istemez ve su kayıtlarınızı bir sunucuya göndermez. Yedeklemek için uygulamayı kapatıp veri dosyasını kopyalayabilirsiniz. Okunamayan veri dosyasıyla karşılaşılırsa mevcut değilse `data.json.corrupt` kopyası korunur.
 
-## Sorun giderme
+## 🛠️ Sorun giderme
 
-**`No module named PyQt6` hatası alıyorum.**
+**Program açılmıyor veya `No module named PyQt6` hatası çıkıyor.**
 
-Bağımlılıkları kurduğunuz Python ortamıyla uygulamayı başlattığınızdan emin olun. Yukarıdaki `.venv` komutlarını kullanın.
+Kaynak koddan çalıştırırken yukarıdaki `.venv` kurulum ve başlatma komutlarını kullanın. Hazır EXE paketinde ise arşivin tamamını çıkarttığınızdan emin olun.
 
-**Pencere kayboldu ama uygulama kapanmadı.**
+**`No module named app_resources` veya başka bir proje modülü hatası çıkıyor.**
 
-Su Cini sistem tepsisinde çalışır. Damla simgesinden pencereyi tekrar açabilir veya **Çıkış** ile uygulamayı kapatabilirsiniz.
+Kaynak dosyalar eksik olabilir. Yalnızca `main.py` dosyasını kopyalamayın; projenin tamamını indirin ve `assets` klasörünü koruyun.
+
+**Programı yeniden başlatınca eski bardak sayısı görünüyor.**
+
+Kayıtların korunması normaldir. Temiz bir tur başlatmak için tepsi menüsündeki **Bugünkü ilerlemeyi sıfırla** seçeneğini kullanın.
+
+**Hedef tamamlandıktan sonra sayaç sıfır oldu.**
+
+Bu sürümde hedef tamamlanınca yeni tur başlar. Kutlamanın ardından aynı hedefi tekrarlayabilir veya yeni hedef seçebilirsiniz.
+
+**Pencere kayboldu ama program hâlâ çalışıyor.**
+
+Su Cini sistem tepsisinde çalışmaya devam eder. Tamamen kapatmak için **Çıkış** seçeneğini kullanın.
 
 **Hatırlatma hemen görünmüyor.**
 
-Son su kaydınızdan itibaren seçili aralığın dolması gerekir. Erteleme, açık bir hatırlatma/hedef penceresi veya Windows'taki tam ekran uygulaması otomatik gösterimi bekletebilir. Kontroller belirli aralıklarla yapıldığı için birkaç saniyelik gecikme normaldir.
+Seçili aralığın dolması gerekir. Erteleme, açık hedef/hatırlatma penceresi veya tam ekran uygulaması otomatik gösterimi bekletebilir. Kontroller periyodik olduğu için birkaç saniyelik gecikme normaldir.
 
-**Kayıt hatası görüyorum.**
+**Saklanma animasyonunu göremiyorum.**
 
-Veri klasörüne yazma izniniz ve diskte boş alan olduğundan emin olun. Hata devam ederse terminal üzerinden başlatıp hata çıktısını inceleyin.
+Tam ekran uygulamasından çıkın ve açık hatırlatma penceresinin kapanmasını bekleyin. Birden fazla monitörünüz varsa fare imlecinin bulunduğu monitörün kenarlarına bakın.
 
-## Geliştirme ve testler
+## 🧪 Geliştirme ve testler
 
-Arayüz Python ve PyQt6 ile hazırlanmıştır. Başlangıç noktası `main.py`; hatırlatma akışları `controller.py`, yerel kayıt işlemleri `data_manager.py` içindedir.
-
-Testleri çalıştırmak için:
+Uygulama Python ve PyQt6 ile geliştirilmiştir. Animasyonlar Qt ile çalışır; damla ve kalpler kodla çizilir.
 
 ```powershell
-.\.venv\Scripts\python.exe -m unittest -v test_regressions
+.\.venv\Scripts\python.exe -B -m unittest -v test_regressions
 ```
 
-Testler geçici kayıt dosyaları ve görünmez Qt pencereleri kullanır; kişisel su kayıtlarını değiştirmez. Gün değişimi, veri doğrulama, kayıt hataları, erteleme, tam ekran dönüş akışı, menüler ve pencere zamanlayıcıları kapsanır.
+Testler geçici veriler ve görünmez Qt pencereleri kullanır. Gerçek masaüstünde tam ekran geçişleri, çoklu monitör, farklı DPI ölçekleri ve paketli uygulamanın kurulumu ayrıca doğrulanmalıdır.
 
-Gerçek oyunlarla tam ekran geçişleri, çoklu monitör ve farklı DPI ölçekleri ayrıca masaüstünde doğrulanmalıdır.
+## 📦 Windows build ve Microsoft Store
 
-## Hata bildirimi
+Güncel kaynak paketindeki `build_store.bat`, ayrı bir `.build-venv` ortamı hazırlayıp PyInstaller ile Windows x64 build oluşturur:
 
-Bir sorunla karşılaşırsanız GitHub üzerinden hata bildirirken işletim sisteminizi, Python sürümünüzü, sorunu oluşturan adımları ve varsa hata çıktısını ekleyin.
+```powershell
+.\build_store.bat
+```
+
+**Bu komut önceki `build`, `dist` ve `release` klasörlerini temizler.** Saklamak istediğiniz eski dağıtımları çalıştırmadan önce başka bir konuma alın.
+
+Çıktı `dist\SuCini\SuCini.exe` dosyasıdır. Dağıtırken `dist\SuCini` klasörünün tamamını kullanın. Inno Setup 6 standart konumda kuruluysa kurulum paketi de oluşturulur.
+
+MSIX paketleme, Partner Center kimlikleri ve Store gönderimi için [Microsoft Store yayınlama rehberine](STORE_RELEASE_GUIDE.md) bakın. EXE build alınmış olması, uygulamanın Microsoft Store'da yayımlandığı anlamına gelmez.
+
+## 💬 Hata bildirimi
+
+GitHub üzerinden hata bildirirken Windows sürümünüzü, kullandığınız paketi veya çalıştırma komutunu, sorunu oluşturan adımları ve varsa hata metnini ekleyin.
+
+Uygulama Windows kullanımına odaklanır. Diğer platformlarda tam ekran algılama devre dışıdır. Aynı anda tek bir uygulama örneği çalıştırın; Windows açılışında otomatik başlatma mevcut değildir.
