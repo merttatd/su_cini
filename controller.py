@@ -21,13 +21,16 @@ from PyQt6.QtGui import (
 from PyQt6.QtWidgets import (
     QApplication,
     QMenu,
+    QMessageBox,
     QSystemTrayIcon,
 )
 
+from app_resources import resource_path
 from activity_detector import ActivityDetector
 from behavior_manager import BehaviorManager
 from data_manager import DataManager
 from goal_dialog import GoalDialog
+from goal_cycle_dialog import GoalCycleDialog
 from peek_window import PeekWindow
 from reminder_window import ReminderWindow
 
@@ -42,6 +45,7 @@ class WaterSpiritController:
         application: QApplication
     ):
         self.application = application
+        self.shutdown_requested = False
 
         self.settings = QSettings(
             ORGANIZATION_NAME,
@@ -68,6 +72,8 @@ class WaterSpiritController:
 
         self.create_tray_icon()
         self.select_daily_goal()
+        if self.shutdown_requested:
+            return
         self.create_timers()
         self.schedule_next_peek()
 
@@ -90,6 +96,7 @@ class WaterSpiritController:
             current_cup_size=current_cup_size
         )
 
+        dialog.exit_requested.connect(self.shutdown)
         result = dialog.exec()
 
         if result:
@@ -99,6 +106,17 @@ class WaterSpiritController:
                 goal,
                 cup_size
             )
+
+    def shutdown(self) -> None:
+        self.shutdown_requested = True
+        for name in ("reminder_timer", "activity_timer", "peek_timer"):
+            timer = getattr(self, name, None)
+            if timer is not None:
+                timer.stop()
+        self.window.reset_and_hide()
+        self.peek_window.close()
+        self.tray_icon.hide()
+        self.application.quit()
 
     def create_timers(self) -> None:
         self.reminder_timer = QTimer(
@@ -158,63 +176,15 @@ class WaterSpiritController:
         self.tray_icon.show()
 
     def create_icon(self) -> QIcon:
-        pixmap = QPixmap(
-            64,
-            64
+        icon = QIcon(
+            resource_path("assets/su_cini.ico")
         )
 
-        pixmap.fill(
-            Qt.GlobalColor.transparent
-        )
+        if not icon.isNull():
+            return icon
 
-        painter = QPainter(pixmap)
-
-        painter.setRenderHint(
-            QPainter.RenderHint.Antialiasing
-        )
-
-        path = QPainterPath()
-
-        path.moveTo(32, 4)
-
-        path.cubicTo(
-            25, 18,
-            12, 30,
-            12, 43
-        )
-
-        path.cubicTo(
-            12, 56,
-            20, 61,
-            32, 61
-        )
-
-        path.cubicTo(
-            44, 61,
-            52, 56,
-            52, 43
-        )
-
-        path.cubicTo(
-            52, 30,
-            39, 18,
-            32, 4
-        )
-
-        painter.setBrush(
-            QColor("#65C9FF")
-        )
-
-        painter.setPen(
-            QPen(
-                QColor("#258DCB"),
-                3
-            )
-        )
-
-        painter.drawPath(path)
-        painter.end()
-
+        pixmap = QPixmap(64, 64)
+        pixmap.fill(Qt.GlobalColor.transparent)
         return QIcon(pixmap)
 
     def create_tray_menu(self) -> None:
@@ -269,13 +239,7 @@ class WaterSpiritController:
 
         interval_group = QActionGroup(menu)
         interval_group.setExclusive(True)
-        for minutes in (
-            30,
-            45,
-            60,
-            90,
-            120
-        ):
+        for minutes in range(5, 121, 5):
             action = QAction(
                 f"{minutes} dakika",
                 interval_menu
@@ -307,6 +271,10 @@ class WaterSpiritController:
         )
 
         menu.addAction(stats_action)
+
+        reset_action = QAction("Bugünkü ilerlemeyi sıfırla", menu)
+        reset_action.triggered.connect(self.reset_today_progress)
+        menu.addAction(reset_action)
 
         peek_action = QAction(
             "Su Cini nereye saklandı?",
@@ -377,6 +345,7 @@ class WaterSpiritController:
             )
         )
 
+        dialog.exit_requested.connect(self.shutdown)
         if not dialog.exec():
             return
 
@@ -398,6 +367,25 @@ class WaterSpiritController:
         )
 
         self.create_tray_menu()
+
+    def reset_today_progress(self) -> None:
+        answer = QMessageBox.question(
+            self.window if self.window.isVisible() else None,
+            "Bugünkü ilerlemeyi sıfırla",
+            "Bugünkü bardak, miktar ve erteleme sayaçları sıfırlansın mı?\n"
+            "Günlük hedefin ve bardak miktarın korunacak.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        self.data_manager.reset_today_progress()
+        self.last_drink = datetime.now()
+        self.settings.setValue("last_drink", self.last_drink.isoformat())
+        self.snoozed_until = None
+        self.pending_fullscreen_reminder = False
+        self.window.show_reminder("normal", "Bugünkü ilerleme sıfırlandı. Yeni bir başlangıç!")
+        self.window.hide_after(2800)
 
     def register_drink(self) -> dict:
         drink_result = self.data_manager.register_drink()
@@ -435,16 +423,35 @@ class WaterSpiritController:
                 drink_result["total_ml"],
             "goal_complete":
                 goal_complete,
+            "celebrate_goal": drink_result["celebrate_goal"],
         }
 
     def register_drink_from_tray(self) -> None:
         result = self.register_drink()
+        self.window.show_drink_result(result)
 
-        self.window.show_reminder(
-            result["mood"],
-            result["message"]
+    def prompt_goal_cycle_choice(self) -> None:
+        if getattr(self, "shutdown_requested", False):
+            return
+
+        current_goal = self.data_manager.get_daily_goal()
+        current_cup_size = self.data_manager.get_cup_size()
+
+        dialog = GoalCycleDialog(
+            current_goal=current_goal,
+            current_cup_size=current_cup_size,
         )
+        dialog.exec()
 
+        if dialog.choice == GoalCycleDialog.NEW_GOAL:
+            self.change_daily_goal()
+            return
+
+        # Sayaç hedef tamamlanınca zaten sıfırlandı; aynı ayarlarla yeni tur başlar.
+        self.window.show_reminder(
+            "happy",
+            f"Harika! Yeni tur yine {current_goal} bardak. Hadi devam! ♥",
+        )
         self.window.hide_after(2800)
 
     def snooze(self) -> dict:
