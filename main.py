@@ -1,9 +1,10 @@
 import sys
 import traceback
 
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
+from app_resources import resource_path
 from controller import (
     APP_NAME,
     ORGANIZATION_NAME,
@@ -22,6 +23,10 @@ def main() -> None:
 
     application.setOrganizationName(
         ORGANIZATION_NAME
+    )
+
+    application.setWindowIcon(
+        QIcon(resource_path("assets/su_cini.ico"))
     )
 
     application.setQuitOnLastWindowClosed(
@@ -45,6 +50,9 @@ def main() -> None:
         controller = WaterSpiritController(application)
     except Exception:
         report_error(*sys.exc_info())
+        return
+
+    if controller.shutdown_requested:
         return
 
     application.water_spirit_controller = (
