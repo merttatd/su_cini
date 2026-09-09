@@ -3,10 +3,12 @@ import random
 from PyQt6.QtCore import (
     QEasingCurve,
     QPoint,
+    QRect,
     QPropertyAnimation,
     QTimer,
     Qt,
 )
+from PyQt6.QtGui import QCursor, QRegion
 from PyQt6.QtWidgets import (
     QApplication,
     QVBoxLayout,
@@ -27,6 +29,8 @@ class PeekWindow(QWidget):
 
         self.is_peeking = False
         self.hiding = False
+        self.edge = None
+        self.peek_geometry = None
 
         self.hidden_position = QPoint()
         self.visible_position = QPoint()
@@ -85,57 +89,27 @@ class PeekWindow(QWidget):
         if self.is_peeking:
             return
 
-        screen = QApplication.primaryScreen()
+        screen = QApplication.screenAt(QCursor.pos()) or QApplication.primaryScreen()
 
         if screen is None:
             return
 
-        geometry = screen.availableGeometry()
-
-        minimum_y = geometry.top() + 80
-
-        maximum_y = (
-            geometry.bottom()
-            - self.height()
-            - 100
-        )
-
-        if maximum_y <= minimum_y:
-            peek_y = max(geometry.top(), geometry.center().y() - self.height() // 2)
-        else:
-            peek_y = random.randint(
-                minimum_y,
-                maximum_y
-            )
-
-        hidden_x = (
-            geometry.right() + 10
-        )
-
-        visible_x = (
-            geometry.right()
-            - 58
-        )
-
-        self.hidden_position = QPoint(
-            hidden_x,
-            peek_y
-        )
-
-        self.visible_position = QPoint(
-            visible_x,
-            peek_y
-        )
+        self.peek_geometry = screen.availableGeometry()
+        self.edge = random.choice([edge for edge in ("right", "left", "top", "bottom")
+                                   if edge != self.edge])
+        self.hidden_position, self.visible_position = self.positions_for_edge(
+            self.peek_geometry, self.edge)
+        self.droplet.set_rotation(180 if self.edge == "top" else 0)
 
         self.move(
             self.hidden_position
         )
 
-        self.show()
-        self.raise_()
-
         self.is_peeking = True
         self.hiding = False
+        self.update_edge_mask()
+        self.show()
+        self.raise_()
 
         self.animate_to(
             self.visible_position,
@@ -149,6 +123,46 @@ class PeekWindow(QWidget):
                 7500
             )
         )
+
+    def positions_for_edge(self, geometry: QRect, edge: str) -> tuple[QPoint, QPoint]:
+        def along_edge(start, length, size):
+            low, high = start + 60, start + length - size - 60
+            return random.randint(low, high) if high >= low else start + max(0, (length - size) // 2)
+
+        if edge in ("left", "right"):
+            y = along_edge(geometry.top(), geometry.height(), self.height())
+            if edge == "left":
+                return (QPoint(geometry.left() - self.width() - 10, y),
+                        QPoint(geometry.left() - self.width() + 95, y))
+            return (QPoint(geometry.right() + 11, y),
+                    QPoint(geometry.right() + 1 - 95, y))
+        x = along_edge(geometry.left(), geometry.width(), self.width())
+        if edge == "top":
+            return (QPoint(x, geometry.top() - self.height() - 10),
+                    QPoint(x, geometry.top() - self.height() + 130))
+        if edge == "bottom":
+            return (QPoint(x, geometry.bottom() + 11),
+                    QPoint(x, geometry.bottom() + 1 - 125))
+        raise ValueError(f"Unknown peek edge: {edge}")
+
+    def update_edge_mask(self) -> None:
+        if self.peek_geometry is None:
+            return
+        visible = self.rect().intersected(self.peek_geometry.translated(-self.pos()))
+        # An empty QRegion removes the mask; use a region outside the widget instead.
+        self.setMask(QRegion(visible if not visible.isEmpty() else QRect(-2, -2, 1, 1)))
+
+    def moveEvent(self, event) -> None:
+        self.update_edge_mask()
+        super().moveEvent(event)
+
+    def hideEvent(self, event) -> None:
+        self.auto_hide_timer.stop()
+        if self.animation is not None:
+            self.animation.stop()
+        self.is_peeking = False
+        self.hiding = False
+        super().hideEvent(event)
 
     def hide_peek(self) -> None:
         if (
