@@ -1,13 +1,17 @@
 from PyQt6.QtCore import (
     QEasingCurve,
     QPoint,
+    QPointF,
     QPropertyAnimation,
+    QParallelAnimationGroup,
+    QSequentialAnimationGroup,
     QTimer,
     Qt,
 )
 from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
+    QGraphicsOpacityEffect,
     QLabel,
     QPushButton,
     QVBoxLayout,
@@ -15,6 +19,7 @@ from PyQt6.QtWidgets import (
 )
 
 from droplet_widget import DropletWidget
+from celebration_effect import KissHearts
 
 
 class ReminderWindow(QWidget):
@@ -31,6 +36,16 @@ class ReminderWindow(QWidget):
         self.configure_window()
         self.create_interface()
         self.create_animations()
+        self.celebration = None
+        self.return_position = None
+        self.hearts = KissHearts(self)
+        self.text_effects = []
+        for widget in (self.message_bubble, self.bubble_tail, self.progress_label,
+                       self.drink_button, self.snooze_button):
+            effect = QGraphicsOpacityEffect(widget)
+            effect.setOpacity(1.0)
+            widget.setGraphicsEffect(effect)
+            self.text_effects.append(effect)
 
     def configure_window(self) -> None:
         self.setWindowFlags(
@@ -267,6 +282,7 @@ class ReminderWindow(QWidget):
         message: str,
         preserve_position: bool = False
     ) -> None:
+        self.cancel_celebration()
         self.hide_timer.stop()
         self.drink_button.setEnabled(True)
         self.snooze_button.setEnabled(True)
@@ -359,24 +375,104 @@ class ReminderWindow(QWidget):
 
     def drink_water(self) -> None:
         result = self.controller.register_drink()
+        self.show_drink_result(result)
 
-        self.droplet.set_mood(
-            result["mood"]
-        )
-
-        self.message_bubble.setText(
-            result["message"]
-        )
-
-        self.update_progress(
-            result["drink_count"],
-            result["goal"],
-            result["total_ml"]
-        )
-
+    def show_drink_result(self, result: dict) -> None:
+        self.show_reminder(result["mood"], result["message"], preserve_position=True)
         self.disable_buttons()
+        if result.get("celebrate_goal"):
+            self.celebrate_goal()
+        else:
+            self.hide_after(2800)
 
-        self.hide_after(2800)
+    def celebrate_goal(self) -> None:
+        self.hide_timer.stop()
+        self.fade_animation.stop()
+        self.setWindowOpacity(1.0)
+        self.return_position = self.pos()
+        if self.slide_animation is not None:
+            if self.slide_animation.state() == QPropertyAnimation.State.Running:
+                self.return_position = self.slide_animation.endValue()
+            self.slide_animation.stop()
+        self.drag_position = None
+        self.message_bubble.setText("Hedef tamamlandı! Bu öpücük senin için! ♥")
+        self.droplet.set_mood("happy")
+        self.layout().activate()
+        screen = self.screen() or QApplication.primaryScreen()
+        if screen is None:
+            self.hide_after(2800)
+            return
+        # Center the character itself, including on secondary monitors.
+        center = screen.availableGeometry().center()
+        character_center = self.droplet.mapTo(self, self.droplet.rect().center())
+        destination = center - character_center
+        self.hearts.setGeometry(self.rect())
+        self.hearts.origin = QPointF(self.droplet.mapTo(self, QPoint(80, 115)))
+        self.hearts.progress = 0.0
+        self.hearts.show()
+        self.hearts.raise_()
+        self.celebration = QSequentialAnimationGroup(self)
+        arrival = QPropertyAnimation(self, b"pos")
+        arrival.setDuration(1600)
+        arrival.setStartValue(self.pos())
+        arrival.setEndValue(destination)
+        arrival.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        arrival.finished.connect(lambda: self.droplet.set_mood("kiss"))
+        kiss = QPropertyAnimation(self.hearts, b"progress")
+        kiss.setDuration(2400)
+        kiss.setStartValue(0.0)
+        kiss.setEndValue(1.0)
+        kiss.finished.connect(lambda: self.droplet.set_mood("happy"))
+        return_home = QPropertyAnimation(self, b"pos")
+        return_home.setDuration(1600)
+        return_home.setStartValue(destination)
+        return_home.setEndValue(self.return_position)
+        return_home.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        arrival_group = QParallelAnimationGroup()
+        arrival_group.addAnimation(arrival)
+        arrival_group.addAnimation(self.fade_text(1.0, 0.0, 650))
+        return_home.finished.connect(lambda: self.message_bubble.setText(
+            "İyi ki kendine vakit ayırdın! ♥"))
+        for animation in (arrival_group, kiss, return_home, self.fade_text(0.0, 1.0, 700)):
+            self.celebration.addAnimation(animation)
+        self.celebration.finished.connect(self.finish_celebration)
+        self.celebration.start()
+
+    def fade_text(self, start: float, end: float, duration: int):
+        group = QParallelAnimationGroup()
+        for effect in self.text_effects:
+            animation = QPropertyAnimation(effect, b"opacity")
+            animation.setStartValue(start)
+            animation.setEndValue(end)
+            animation.setDuration(duration)
+            animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
+            group.addAnimation(animation)
+        return group
+
+    def finish_celebration(self) -> None:
+        self.cancel_celebration()
+        self.droplet.set_mood("happy")
+        self.message_bubble.setText("İyi ki kendine vakit ayırdın! ♥")
+        self.hide_after(1400)
+
+        # Kutlama kapanınca yeni hedef döngüsü için kullanıcıya seçim sun.
+        QTimer.singleShot(1450, self.controller.prompt_goal_cycle_choice)
+
+    def cancel_celebration(self) -> None:
+        if self.celebration is not None:
+            self.celebration.stop()
+            self.celebration.deleteLater()
+            self.celebration = None
+            if self.return_position is not None:
+                self.move(self.return_position)
+        self.return_position = None
+        self.hearts.hide()
+        for effect in self.text_effects:
+            effect.setOpacity(1.0)
+
+    def hideEvent(self, event) -> None:
+        self.cancel_celebration()
+        super().hideEvent(event)
 
     def snooze_reminder(self) -> None:
         result = self.controller.snooze()
@@ -394,6 +490,8 @@ class ReminderWindow(QWidget):
         self.hide_after(2400)
 
     def hide_after(self, milliseconds: int) -> None:
+        if self.celebration is not None:
+            return
         self.hide_timer.start(milliseconds)
 
     def disable_buttons(self) -> None:
@@ -401,6 +499,7 @@ class ReminderWindow(QWidget):
         self.snooze_button.setEnabled(False)
 
     def reset_and_hide(self) -> None:
+        self.cancel_celebration()
         self.hide_timer.stop()
         self.fade_animation.stop()
         if self.slide_animation is not None:
@@ -414,6 +513,9 @@ class ReminderWindow(QWidget):
         self.hide()
 
     def mousePressEvent(self, event) -> None:
+        if self.celebration is not None:
+            event.accept()
+            return
         if (
             event.button()
             == Qt.MouseButton.LeftButton
