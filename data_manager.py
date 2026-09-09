@@ -57,6 +57,7 @@ class DataManager:
             "behavior": {
                 "last_action": None,
                 "last_drink_time": None,
+                "celebrated_date": None,
             },
 
             "history": [],
@@ -158,6 +159,18 @@ class DataManager:
 
         self.save()
 
+    def reset_today_progress(self) -> None:
+        defaults = self._default_data()
+        self.data["last_date"] = defaults["last_date"]
+        self.data["today"] = defaults["today"]
+        self.data["behavior"] = defaults["behavior"]
+        self.data["history"].append({
+            "type": "reset",
+            "time": datetime.now().isoformat(),
+        })
+        self.data["history"] = self.data["history"][-2000:]
+        self.save()
+
     def save(self) -> None:
         temporary_path = None
         try:
@@ -257,6 +270,7 @@ class DataManager:
 
         today_data["drink_count"] += 1
         today_data["total_ml"] += self.get_cup_size()
+        celebrate_goal = today_data["drink_count"] >= self.get_daily_goal()
 
         if behavior.get("last_action") == "drink":
             today_data["drink_streak"] += 1
@@ -278,15 +292,24 @@ class DataManager:
 
         self.data["history"] = self.data["history"][-2000:]
 
-        self.save()
-
-        return {
+        # Keep the completed cycle values for the UI/celebration, then
+        # automatically start a fresh cycle without changing the user's goal.
+        result = {
             "rapid_drink": rapid_drink,
+            "celebrate_goal": celebrate_goal,
             "drink_count": today_data["drink_count"],
             "drink_streak": today_data["drink_streak"],
             "total_ml": today_data["total_ml"],
             "goal": self.get_daily_goal(),
         }
+
+        if celebrate_goal:
+            today_data["drink_count"] = 0
+            today_data["total_ml"] = 0
+            today_data["drink_streak"] = 0
+
+        self.save()
+        return result
 
     def register_snooze(self) -> dict[str, int]:
         self._reset_daily_values_if_needed()
