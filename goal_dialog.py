@@ -118,6 +118,8 @@ class NumberStepper(QWidget):
 
 
 class GoalDialog(QDialog):
+    exit_requested = pyqtSignal()
+
     def __init__(
         self,
         current_goal: int = 8,
@@ -137,6 +139,25 @@ class GoalDialog(QDialog):
             current_goal,
             current_cup_size
         )
+        self.close_button = QPushButton("×", self)
+        self.close_button.setObjectName("closeButton")
+        self.close_button.setGeometry(self.width() - 62, 24, 32, 32)
+        self.close_button.setAccessibleName("Programı kapat")
+        self.close_button.setToolTip("Programı kapat")
+        self.close_button.setAutoDefault(False)
+        self.close_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.close_button.setStyleSheet("""
+            QPushButton { background: transparent; color: #28546C;
+                border: none; border-radius: 10px; font-size: 26px; }
+            QPushButton:hover { background: #FDE4E4; color: #B42318; }
+            QPushButton:pressed { background: #F9CACA; }
+        """)
+        self.close_button.clicked.connect(self.exit_application)
+        self.close_button.raise_()
+
+    def exit_application(self) -> None:
+        self.reject()
+        self.exit_requested.emit()
 
     def configure_window(self) -> None:
         self.setWindowTitle(
