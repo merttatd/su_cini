@@ -18,6 +18,7 @@ class DropletWidget(QWidget):
         super().__init__(parent)
 
         self.mood = "normal"
+        self.rotation = 0.0
 
         # Karakter çiziminin dikey konumu.
         # Pencerenin kendisini hareket ettirmiyoruz.
@@ -74,12 +75,20 @@ class DropletWidget(QWidget):
         self.mood = mood
         self.update()
 
+    def set_rotation(self, degrees: float) -> None:
+        self.rotation = degrees
+        self.update()
+
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
 
         painter.setRenderHint(
             QPainter.RenderHint.Antialiasing
         )
+
+        painter.translate(self.width() / 2, self.height() / 2)
+        painter.rotate(self.rotation)
+        painter.translate(-self.width() / 2, -self.height() / 2)
 
         # Sadece çizimi hareket ettirir.
         # QWidget ve pencere pozisyonu sabit kalır.
@@ -213,7 +222,18 @@ class DropletWidget(QWidget):
             face_color
         )
 
-        if self.mood == "happy":
+        if self.mood == "kiss":
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawArc(50, 92, 18, 14, 0, 180 * 16)
+            painter.drawArc(82, 92, 18, 14, 0, 180 * 16)
+            lips = QPainterPath()
+            lips.moveTo(72, 111)
+            lips.cubicTo(87, 108, 86, 115, 77, 116)
+            lips.cubicTo(87, 117, 86, 124, 72, 121)
+            painter.setPen(QPen(QColor("#D94179"), 3))
+            painter.drawPath(lips)
+
+        elif self.mood == "happy":
             self.draw_happy_face(painter)
 
         elif self.mood == "worried":
